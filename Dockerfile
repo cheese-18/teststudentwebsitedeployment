@@ -1,5 +1,8 @@
 FROM php:8.3-fpm-alpine
 
+# Set environment for Composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 # Install system dependencies & PHP extensions
 RUN apk add --no-cache \
     nginx \
@@ -21,23 +24,30 @@ RUN apk add --no-cache \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Get Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Get Composer binary
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy application files
+# Copy composer manifest first to leverage caching and debug dependencies
+COPY composer.json composer.lock* /var/www/html/
+
+# Install composer dependencies
+RUN composer install --no-dev --no-interaction --no-scripts --optimize-autoloader --ignore-platform-reqs
+
+# Copy application source code
 COPY . /var/www/html
 
-# Install Composer dependencies without running post-autoload scripts that require full runtime env
-RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction
+# Run composer dump-autoload to ensure classmaps are up to date
+RUN composer dump-autoload --optimize --no-dev
 
-# Install NPM dependencies & build assets
+# Install NPM dependencies & build frontend assets
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm run build && rm -rf node_modules
 
-# Configure permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+# Configure storage and cache permissions
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy Nginx configuration
