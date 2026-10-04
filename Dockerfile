@@ -19,10 +19,12 @@ RUN apk add --no-cache \
     freetype-dev \
     libjpeg-turbo-dev \
     mysql-client \
+    postgresql-dev \
+    postgresql-client \
     mariadb-connector-c-dev
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
 
 # Get Composer binary
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
