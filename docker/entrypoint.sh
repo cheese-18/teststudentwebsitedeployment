@@ -1,6 +1,15 @@
 #!/bin/sh
 set -e
 
+# Configure PHP-FPM pool settings
+if [ -f /usr/local/etc/php-fpm.d/www.conf ]; then
+    sed -i 's/pm.max_children = 5/pm.max_children = 20/g' /usr/local/etc/php-fpm.d/www.conf || true
+fi
+
+# Configure Nginx port from $PORT env variable (default 80, Render often uses 10000)
+PORT="${PORT:-80}"
+sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/nginx.conf || true
+
 # Ensure storage and bootstrap/cache permissions at container startup
 mkdir -p /var/www/html/storage/logs \
          /var/www/html/storage/framework/sessions \
