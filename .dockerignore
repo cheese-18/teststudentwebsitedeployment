@@ -1,0 +1,11 @@
+node_modules
+vendor
+.git
+.env
+storage/*.key
+public/hot
+public/storage
+.phpunit.result.cache
+.fleet
+.idea
+.vscode

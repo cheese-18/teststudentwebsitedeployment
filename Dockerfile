@@ -30,11 +30,11 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install Composer dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install Composer dependencies without running post-autoload scripts that require full runtime env
+RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction
 
 # Install NPM dependencies & build assets
-RUN npm ci && npm run build && rm -rf node_modules
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm run build && rm -rf node_modules
 
 # Configure permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
