@@ -45,9 +45,9 @@ RUN composer dump-autoload --optimize --no-dev --no-scripts
 # Install NPM dependencies & build frontend assets
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm run build && rm -rf node_modules
 
-# Configure storage and cache permissions
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+# Create required directories for Nginx and PHP-FPM
+RUN mkdir -p /run/nginx /var/log/nginx /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/log/nginx /var/lib/nginx \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy Nginx configuration
