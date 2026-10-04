@@ -1,7 +1,8 @@
 #!/bin/sh
 set -e
 
-# Cache configuration & routes
+# Discover packages and cache setup at runtime
+php artisan package:discover --ansi || true
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true

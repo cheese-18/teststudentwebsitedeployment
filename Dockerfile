@@ -39,8 +39,8 @@ RUN composer install --no-dev --no-interaction --no-scripts --optimize-autoloade
 # Copy application source code
 COPY . /var/www/html
 
-# Run composer dump-autoload to ensure classmaps are up to date
-RUN composer dump-autoload --optimize --no-dev
+# Run composer dump-autoload without scripts
+RUN composer dump-autoload --optimize --no-dev --no-scripts
 
 # Install NPM dependencies & build frontend assets
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi && npm run build && rm -rf node_modules
