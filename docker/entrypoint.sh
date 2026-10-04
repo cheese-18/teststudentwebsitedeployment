@@ -66,8 +66,11 @@ php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 
-# Start PHP-FPM in the background
+echo "Starting PHP-FPM daemon..."
 php-fpm -D
 
-# Start Nginx in the foreground
+echo "Testing Nginx configuration..."
+nginx -t
+
+echo "Starting Nginx web server..."
 exec nginx -g "daemon off;"
