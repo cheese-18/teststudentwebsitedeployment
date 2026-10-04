@@ -6,9 +6,10 @@ if [ -f /usr/local/etc/php-fpm.d/www.conf ]; then
     sed -i 's/pm.max_children = 5/pm.max_children = 20/g' /usr/local/etc/php-fpm.d/www.conf || true
 fi
 
-# Configure Nginx port from $PORT env variable (default 80, Render often uses 10000)
-PORT="${PORT:-80}"
-sed -i "s/listen 80;/listen ${PORT};/g" /etc/nginx/nginx.conf || true
+# Configure Nginx port from $PORT env variable if dynamic
+if [ -n "$PORT" ] && [ "$PORT" != "80" ] && [ "$PORT" != "10000" ]; then
+    sed -i "s/listen 80;/listen 80;\n        listen ${PORT};/g" /etc/nginx/nginx.conf || true
+fi
 
 # Ensure storage and bootstrap/cache permissions at container startup
 mkdir -p /var/www/html/storage/logs \
@@ -36,9 +37,19 @@ php artisan package:discover --ansi || true
 
 # Wait for PostgreSQL database to be reachable
 if [ -n "$DB_HOST" ]; then
-    echo "Checking database connection to $DB_HOST:$DB_PORT..."
+    echo "Checking database connection to $DB_HOST:${DB_PORT:-5432}..."
     for i in $(seq 1 30); do
-        nc -z -w 2 "$DB_HOST" "${DB_PORT:-5432}" && break || true
+        if command -v pg_isready > /dev/null 2>&1; then
+            if pg_isready -h "$DB_HOST" -p "${DB_PORT:-5432}" > /dev/null 2>&1; then
+                echo "Database is reachable."
+                break
+            fi
+        else
+            if nc -z -w 2 "$DB_HOST" "${DB_PORT:-5432}" > /dev/null 2>&1; then
+                echo "Database is reachable."
+                break
+            fi
+        fi
         echo "Waiting for database to become available ($i/30)..."
         sleep 2
     done
