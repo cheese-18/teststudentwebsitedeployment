@@ -1,6 +1,14 @@
 #!/bin/sh
 set -e
 
+# Generate APP_KEY if missing
+if [ -z "$APP_KEY" ]; then
+    php artisan key:generate --force || true
+fi
+
+# Link storage
+php artisan storage:link || true
+
 # Clear stale caches
 php artisan config:clear || true
 php artisan route:clear || true
@@ -22,6 +30,11 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "Running database migrations..."
     php artisan migrate --force || echo "Migration command failed, continuing startup..."
 fi
+
+# Cache optimized configuration and routes
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
 
 # Start PHP-FPM in the background
 php-fpm -D
