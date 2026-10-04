@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: school-website
+    runtime: docker
+    plan: free
+    region: singapore
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: RUN_MIGRATIONS
+        value: "true"
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: school-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: school-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: school-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: school-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: school-db
+          property: password
+
+databases:
+  - name: school-db
+    plan: free
+    region: singapore
+    databaseName: school_db
+    user: school_user
